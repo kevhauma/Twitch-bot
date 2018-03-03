@@ -1,13 +1,12 @@
 {
-    //remove comments if you want to use this file
-    "timezone": "x", //timezone UTC+x:00
-    "twitchChannel": "", //channel your bot will be active in
-    "twitchOAuth": "", //oauth key via https://twitchapps.com/tmi/ (login with bot account)
-    "botName": "", //botname
-    "clevertoken": "", //token for cleverbot (optional)
+    "timezone": "1",
+    "twitchChannel": "mrjunior717",
+    "twitchOAuth": "oauth:fhbqlcy4keiootaa04r8szkvr6iefi",
+    "botName": "juniorBot2000",
+    "clevertoken": "CC5tttB_xWyhoaM1DMdkwz-CfeA",
     "twitchHeader": {
         "headers": {
-            "client-id": "", //twitch's Api Client ID via https://dev.twitch.tv/twitch-login?returnUrl=https://dev.twitch.tv/
+            "client-id": "85run8xbz4950k4po2oumhg6c3hsbh",
             "Content-Type": "application/x-www-form-urlencoded"
         }
     },
@@ -22,8 +21,8 @@
         "what": ["Nothing particular.", "I don't know, what about YOU?", "Doing it in the butt."]
     },
     "clocks": ["🕚", "🕐", "🕑", "🕒", "🕓", "🕔", "🕕", "🕖", "🕗", "🕘", "🕙", "🕚", "🕚"],
-    "currency": "juniors", //your currency name
-    "slotEmotes": ["DansGame", "juniorQuack", "juniorXQuack", "FeelsBadMan", "Kappa", "KappaPride", "FailFish", "PJSalt", "SwiftRage", "Kreygasm"], //emotes for slots game
-    "goodWords": ["beep", "butterfly", "cabbage", "sunflower", "love", "turtles"], //filter Text to speech (add if you need)
-    "badWords": ["fuck", "shit", "penis", "damn", "dick", "ass"] //bad words for filer
+    "currency": "juniors",
+    "slotEmotes": ["DansGame", "juniorQuack", "juniorXQuack", "FeelsBadMan", "Kappa", "KappaPride", "FailFish", "PJSalt", "SwiftRage", "Kreygasm"],
+    "goodWords": ["beep", "butterfly", "cabbage", "sunflower", "love", "turtles"],
+    "badWords": ["fuck", "shit", "penis", "damn", "dick", "ass"]
 }
