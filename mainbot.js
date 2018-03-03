@@ -20,11 +20,11 @@ var options = {
     },
     channels: [config.channelname] //config.twitchChannel
 }
-var membersFile = "/members.json"
-var dataFile = "/data.json"
+var membersFile = "/data/members.json"
+var dataFile = "/data/data.json"
 var app = express()
-var members = require("./members.json")
-var data = require("./data.json")
+var members = require("./data/members.json")
+var data = require("./data+data.json")
 var Cleverbot = require('cleverbot-node');
 cleverbot = new Cleverbot;
 cleverbot.configure({
@@ -52,6 +52,7 @@ client.on("connected", function (address, port) {
 
 var onlineMembers = new Array();
 
+//set API endpoints
 app.use(express.static('client'))
 
 app.get('/api/message', function (req, res) {
