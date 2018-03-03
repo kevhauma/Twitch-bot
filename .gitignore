@@ -1,0 +1,11 @@
+/node_modules
+/csv
+*.bat
+try.js
+config.json
+api.js
+afk.json
+afkbot.js
+*.csv
+*.txt
+package-lock.json
