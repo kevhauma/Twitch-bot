@@ -1,0 +1,44 @@
+<html>
+
+<head>
+    <title>Express</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular.js"></script>
+    <script>
+        var App = angular.module('App', []);
+        App.controller('MainController', function($scope, $http) {
+            getMessage()
+
+            function getMessage() {
+                setTimeout(function() {
+                    $http.get("http://localhost:3000/api/gif").success(function(res) {
+                        $scope.gif = "https://i.redd.it/mmxsaavbhr801.jpg";
+                    });
+                    getMessage()
+                }, 500)
+            }
+        });
+
+    </script>
+    <style>
+        .gif {
+            width: 10%;
+            padding-left: 30%;
+            padding-top: 20%;
+        }
+
+    </style>
+
+
+</head>
+
+<body ng-app="App">
+    <div ng-controller="MainController">
+        <img ng-src="{{gif}}" class="gif">
+
+
+    </div>
+
+
+</body>
+
+</html>
