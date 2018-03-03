@@ -1,0 +1,7 @@
+[
+{"name":"!ping","response":"pong"}
+,
+{"name":"!social","response":"this is social"}
+,
+{"name":"!ip","response":"play.minesca.pe "}
+]

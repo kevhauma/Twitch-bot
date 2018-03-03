@@ -1,0 +1,22 @@
+{
+    "name": "twitchbot",
+    "version": "1.0.0",
+    "description": "maddiebto",
+    "main": "timezones.js",
+    "dependencies": {
+        "JSONStream": "^1.3.1",
+        "axios": "^0.17.1",
+        "cleverbot-node": "^0.3.11",
+        "express": "^4.16.2",
+        "jsonfile": "^4.0.0",
+        "moment": "^2.20.1",
+        "say": "^0.14.0",
+        "tmi.js": "^1.2.1"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC"
+}
