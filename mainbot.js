@@ -1,11 +1,12 @@
-var tmi = require('tmi.js');
-const config = require("./config.json");
-const axios = require('axios')
-var fileSystem = require("fs")
-var JSONStream = require("JSONStream")
-var moment = require("moment")
-var say = require("say")
-var express = require("express")
+var tmi = require('tmi.js'); // main twitch package
+const config = require("./config.json") // get config data
+const axios = require('axios') //REST call package
+var fileSystem = require("fs") //filesystem package
+var JSONStream = require("JSONStream") //write large json arrays
+var moment = require("moment") //easy time calculation package
+var say = require("say") //text to speech package
+var express = require("express") //web server package
+var Cleverbot = require('cleverbot-node') // package for cleverbot
 var options = {
     options: {
         debug: true
@@ -19,17 +20,14 @@ var options = {
         password: config.twitchOAuth
     },
     channels: [config.channelname] //config.twitchChannel
-}
-var membersFile = "/data/members.json"
+} //options for twitch client
+var membersFile = "/data/members.json" //file path to write
 var dataFile = "/data/data.json"
+//initialize web server
 var app = express()
+//get data loaded
 var members = require("./data/members.json")
-var data = require("./data+data.json")
-var Cleverbot = require('cleverbot-node');
-cleverbot = new Cleverbot;
-cleverbot.configure({
-    botapi: config.clevertoken
-});
+var data = require("./data/data.json")
 commands = data[0]
 quotes = data[2]
 counters = data[1]
@@ -43,7 +41,12 @@ var lastMessage = {
 }
 var bannerS = " "
 var activeGif = "trans.png"
+//initialize and setup API options and stuff
 var client = tmi.client(options);
+cleverbot = new Cleverbot;
+cleverbot.configure({
+    botapi: config.clevertoken
+});
 client.connect();
 client.on("connected", function (address, port) {
     console.log("connected: " + address + ":" + port);
@@ -70,19 +73,20 @@ app.use(function (req, res, next) {
     next();
 });
 
+//everything happens on message
 client.on("chat", function (channel, user, message, self) {
     lastMessage = {
         "message": message,
         color: user.color
-    }
+    } //set message for webserver
     if (self) return
 
-    addMessage(user.username, message)
-    if (Math.random() > 0.95) changeWord(message)
-    commandsC(message, user)
+    addMessage(user.username, message) //adds to messageCount stat from user
+    if (Math.random() > 0.95) changeWord(message) //change to change a word in a sentence
+    commandsC(message, user) //check for commands
 });
 client.on("join", function (channel, user, message, self) {
-    onlineMembers.push(user)
+    onlineMembers.push(user) //if member joins, add it to the array
     console.log(user + " has joined")
 
 })
@@ -94,55 +98,26 @@ client.on("part", function (channel, user, message, self) {
     console.log(user + " has left")
 })
 
-function changeWord(message) {
 
-    var words = message.split(" ")
-    var r = Math.floor(Math.random() * words.length)
-    console.log(r)
-    var out = ""
-    for (var i = 0; i < words.length; i++) {
-        if (i == r) out += "quack "
-        else out += words[i] + " "
-    }
-    console.log("changing word: " + out)
-    client.say(config.twitchChannel, out)
-}
 
-function setGif(link, variable) {
-    switch (variable) {
-        case "banner":
-            bannerS = link
-            setTimeout(() => {
-                bannerS = " "
-            }, 6000)
-            break
-        case "activeGif":
-            activeGif = link
-            setTimeout(() => {
-                activeGif = "trans.png"
-            }, 10000)
-            break
-    }
-}
-
-function commandsC(message, user) {
-    if (!message.startsWith("!")) return
-    var lowercaseContent = message.toLowerCase()
+function commandsC(message, user) { //TODO make this not shit
+    if (!message.startsWith("!"))
+        var lowercaseContent = message.toLowerCase()
     var words = message.split(" ")
     var command = words[0]
     var restofmessage = ""
     var response = ""
     isAllowed = true
     var commandF = findCommand(words[0])
-    if (commandF) {
+    if (commandF) { //if command is one of the save commands
         client.say(config.twitchChannel, commandF.response)
         return
     }
-
-    for (var i = 0; i < words.length; i++) { // puts every word (other than the command) so it works with sentences instead of just one words
-        if (i != 0) restofmessage += words[i] + " ";
+    //store options (!command [options]) 
+    for (var i = 1; i < words.length; i++) { // puts every word (other than the command) so it works with sentences instead of just one words
+        restofmessage += words[i] + " ";
     }
-
+    //look if command is a counter
     for (var i = 0; i < counters.length; i++) {
         if (command === "!" + counters[i].name) {
             counters[i].count++;
@@ -160,12 +135,14 @@ function commandsC(message, user) {
             counters[i].response = restofmessage
         }
     }
+    //if command is a gif-command
     for (var i = 0; i < gifs.length; i++) {
         if (command === gifs[i].name) {
             setGif(gifs[i].link, "activeGif")
         }
 
     }
+    //50/50 hit miss game (started out as snowball)
     if (command === '!meatball') {
         var thrower = findMember(user.username)
         if (restofmessage) { //if there is something to throw at
@@ -191,11 +168,11 @@ function commandsC(message, user) {
         } else response = "didn't find a target to throw at" //if there isn't something to throw at
 
     } else
-    if (command === "!lurk") {
+    if (command === "!lurk") { //simple response command
         response = user.username + " is hiding in the bushes."
         setGif(response, "banner")
     } else
-    if (command === "!ask") {
+    if (command === "!ask") { //!ask anything and get response (by cleverbot or pre-save messages)
         var questionword = "";
         var isYesNo = true;
         var isOr = false;
@@ -239,12 +216,12 @@ function commandsC(message, user) {
         }
 
     } else
-    if (command === '!ban') {
+    if (command === '!ban') { //fake ban message
         if (restofmessage)
             response = restofmessage + " has been succesfully banned from this channel."
         setGif(user.username + " has banned " + restofmessage, "banner")
     } else
-    if (command.startsWith('!command')) {
+    if (command.startsWith('!command')) { //custom commands for viewers
         var nameC, responseC
         restofmessage = ""
         for (var i = 2; i < words.length; i++) { // puts every word (other than the command) so it works with sentences instead of just one words
@@ -307,7 +284,7 @@ function commandsC(message, user) {
         } else
             response = "!commandadd <!command> <response>, !commandedit <!command> <response>, !commandrem <!command> & !commandsum are available"
     }
-    if (command === '!gamble') {
+    if (command === '!gamble') { //gamble part
         var gambleAmount
         var asker = findMember(user.username, true)
         if (!words[1]) {
@@ -344,7 +321,7 @@ function commandsC(message, user) {
             setGif(user.username + " has lost " + gambleAmount, "banner")
         }
     }
-    if (command === "!" + config.currency) {
+    if (command === "!" + config.currency) { //currency check (mods can (not yet) check other's currency)
         var asker = findMember(user.username, true)
         if (words[1]) {
             name = words[1].replace("@", "")
@@ -355,7 +332,7 @@ function commandsC(message, user) {
         response = "@" + asker.name + " has " + asker.currency.points + " " + config.currency + " [" + asker.currency.place + "/" + members.length + "]."
         setGif(user.username + " has " + asker.currency.points + " " + config.currency, "banner")
     } else
-    if (command === "!stats") {
+    if (command === "!stats") { //get your own stats
         var asker = findMember(user.username, true)
         if (words[1]) {
             name = words[1].replace("@", "")
@@ -368,7 +345,7 @@ function commandsC(message, user) {
         var minutes = time - hours * 60
         response = "@" + asker.name + " has spent " + hours + "h" + minutes + "m in chat. He might have said " + asker.stats.messagecount + " stuff."
     } else
-    if (command.startsWith("!counter")) {
+    if (command.startsWith("!counter")) { //counter commands (to add counters)
         if ('!counteradd') {
             if (!words[1]) return
             counters.push({
@@ -383,7 +360,7 @@ function commandsC(message, user) {
             }
         }
     } else
-    if (command.startsWith("!quote")) {
+    if (command.startsWith("!quote")) { //quotes and stuff
         if (command === "!quoteadd") {
             restofmessage = ""
             for (var i = 2; i < words.length; i++) {
@@ -402,7 +379,7 @@ function commandsC(message, user) {
             response = '" ' + quote.quote + '" - ' + quote.author + " (" + quote.date + ")"
         }
     } else
-    if (command === "!steal") {
+    if (command === "!steal") { //user can steal someone's points (only if the other user is online)
         var thief = findMember(user.username, true)
         var victim
         if (words[1]) {
@@ -431,7 +408,7 @@ function commandsC(message, user) {
             setGif(thief.name + " has failed their theft", "banner")
         }
     } else
-    if (command === "!tts") {
+    if (command === "!tts") { //text to speech if user has more than 1500 points
         var cost = 1500
         var speaker = findMember(user.username, true)
         if (speaker.currency.points < cost) {
@@ -449,7 +426,7 @@ function commandsC(message, user) {
         }
         say.speak(user.username + "says: " + filtered)
     } else
-    if (command === "!time") {
+    if (command === "!time") { //current time
         var now = new Date()
         var standardTime = now
         var targetTime = {
@@ -474,7 +451,7 @@ function commandsC(message, user) {
         setGif("time: " + targetTime.emoji + " " + targetTime.hour + ":" + targetTime.minutes + targetTime.AM + " " + targetTime.emoji, "banner")
 
     } else
-    if (command === "!first") {
+    if (command === "!first") { //get user's first message
         asker = findMember(user.username, true)
         if (words[1]) {
             name = words[1].replace("@", "")
@@ -492,7 +469,7 @@ function commandsC(message, user) {
         var whenTime = moment(firstMessageDate[0] + firstMessageDate[1] + firstMessageDate[2] + firstMessageTime[0] + firstMessageTime[1] + firstMessageTime[2], "YYYYMMDDhhmmss").fromNow()
         response = '" ' + asker.stalk.firstmessage + ' "  by @' + asker.name + '(' + whenTime + ')'
     } else
-    if (command === "!stalk") {
+    if (command === "!stalk") { //gets user last message
         if (!words[1]) {
             client.say(config.twitchChannel, "@" + user.username + " who do you even want to stalk? :thinking:")
             return
@@ -517,7 +494,7 @@ function commandsC(message, user) {
         var whenTime = moment(lastMessageDate[0] + lastMessageDate[1] + lastMessageDate[2] + lastMessageTime[0] + lastMessageTime[1] + lastMessageTime[2], "YYYYMMDDhhmmss").fromNow()
         response = 'last message by @' + asker.name + ' " ' + asker.stalk.lastmessage + ' " ' + '(' + whenTime + ')'
     } else
-    if (command === "!give") {
+    if (command === "!give") { //give points to other users
         var giver = findMember(user.username, true)
         var receiver
         if (words[1]) {
@@ -538,7 +515,7 @@ function commandsC(message, user) {
             setGif(user.username + " gave " + words[2] + " to " + receiver.name, "banner")
         }
     } else
-    if (command === "!slots") {
+    if (command === "!slots") { //slots game
         var gambler = findMember(user.username)
         var Aemotes = config.slotEmotes
         var slots = new Array()
@@ -605,7 +582,7 @@ function commandsC(message, user) {
     }
 }
 
-function getResponse(questionWord) {
+function getResponse(questionWord) { //for !ask command
     var returnValue;
     switch (questionWord) {
         case "when":
@@ -630,7 +607,7 @@ function getResponse(questionWord) {
     return returnValue;
 }
 
-function addMessage(user, message) {
+function addMessage(user, message) { //adds message to used (and some other data too)
     var asker = findMember(user, true)
     if (!asker.stalk) asker.stalk = {}
     if (!asker.stalk.firstmessage) asker.stalk.firstmessage = message
@@ -640,14 +617,14 @@ function addMessage(user, message) {
     asker.stats.messagecount += 1
 }
 
-function findCommand(command) {
+function findCommand(command) { //find command from saved commands
     for (var i = 0; i < commands.length; i++) {
         if (commands[i].name === command) return commands[i]
     }
     return null
 }
 
-function sort(type) {
+function sort(type) { //sort functions for big array
     if (type === "points") {
         members = members.sort(compareF)
         for (var i = 0; i < members.length; i++)
@@ -673,7 +650,7 @@ function sort(type) {
     }
 }
 
-function givePoints() {
+function givePoints() { //loops every 10minutes, adds minutes to stat and gives points
     setTimeout(function () {
         console.log("live")
         for (var i = 0; i < onlineMembers.length; i++) {
@@ -689,7 +666,7 @@ function givePoints() {
     }, 1000 * 60 * 10)
 }
 
-function changeCurrency(memberC, AddOrSub, amount) {
+function changeCurrency(memberC, AddOrSub, amount) { //try to add/subtract points from member
     amount = Math.abs(amount)
     if (AddOrSub === "add") {
         memberC.currency.points += amount
@@ -704,7 +681,7 @@ function changeCurrency(memberC, AddOrSub, amount) {
     return memberC
 }
 
-function findMember(Fuser, newU) {
+function findMember(Fuser, newU) { //find member based on name
     for (var i = 0; i < members.length; i++) {
         if (members[i].name === Fuser)
             return members[i]
@@ -715,7 +692,7 @@ function findMember(Fuser, newU) {
     } else return null
 }
 
-function addMember(name) {
+function addMember(name) { //add member to the big list
     var Nmember = {
         "name": name,
         "games": {
@@ -739,6 +716,38 @@ function addMember(name) {
     console.log("added " + Nmember.name)
     return Nmember
 }
+
+
+function changeWord(message) {
+    var words = message.split(" ")
+    var r = Math.floor(Math.random() * words.length)
+    console.log(r)
+    var out = ""
+    for (var i = 0; i < words.length; i++) {
+        if (i == r) out += "quack "
+        else out += words[i] + " "
+    }
+    console.log("changing word: " + out)
+    client.say(config.twitchChannel, out)
+}
+
+function setGif(link, variable) { //set gif for webserver
+    switch (variable) {
+        case "banner":
+            bannerS = link
+            setTimeout(() => {
+                bannerS = " "
+            }, 6000)
+            break
+        case "activeGif":
+            activeGif = link
+            setTimeout(() => {
+                activeGif = "trans.png"
+            }, 10000)
+            break
+    }
+}
+
 
 function write(file, array) {
     sort("points")
